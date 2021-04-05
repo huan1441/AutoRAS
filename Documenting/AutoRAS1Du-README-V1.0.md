@@ -14,25 +14,24 @@ The appropriate version of HEC-RAS must already be installed to use rascontrol.
     
     c:\> cd AutoRAS
     
-    c:\AutoRAS> pip install .
+    c:\AutoRAS> pip install
 
 ## Basic Usage
 ```python
->>> import AutoRAS1Du
+>>> import AutoRAS1Du as ARu
 
 >>> # Create a 1D unsteady flow data file based on given boundary data
->>> Py2HecRas_1DU_Flow(ProjectName="WabashAndTributarie")
+>>> ARu.Py2HecRas_1DU_Flow(ProjectName="WabashAndTributarie")
 
 >>> # Create a HEC-RAS 1D unsteady flow plan file
->>> Py2HecRas_1DU_Plan(g=1,u=1,
+>>> ARu.Py2HecRas_1DU_Plan(g=1,u=1,
                        StartDateTime="2008-01-21 00:00",
                        EndDateTime="2008-02-21 00:00",
                        ProjectName="WabashAndTributarie")
 
 >>> # Run HEC-RAS 1D unsteady flow analysis and get results (WSE, flow, velocity)
->>> Py2HecRas_1DU_Run(ProjectName="WabashAndTributarie")    
+>>> ARu.Py2HecRas_1DU_Run(ProjectName="WabashAndTributarie")   
 
 ```
 ## Notes Before Using
-1) Name the boundary data files (CSV): ¡°BC_RiverID_ReachID".csv in the Folder "1D_Unsteady_BC".
-2) Results named as "Variable of ProjectName".csv are stored in the Folder "1D_Unsteady_Results" 
+For more details about the module, please read the AutoRAS1Du Module User's Manual.pdf.
