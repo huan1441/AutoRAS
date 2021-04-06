@@ -7,8 +7,8 @@ AutoRAS1Du is a Python module, which is created based on the HEC-RAS API (RAS507
 5) Py2HecRas_1DU_Run(): run HEC-RAS 1D unsteady flow analysis and extract unsteady results (WSE, flow, average velocity of flow in main channel, and average velocity of flow in total cross section) from the HEC-RAS HDF file, and save as separate CSV files.
 
 
-## Installation
-The appropriate version of HEC-RAS must already be installed to use rascontrol.
+## Installation (TBD)
+The appropriate version of HEC-RAS must already be installed to use AutoRAS.
 
     c:\> git clone https://github.com/AutoRAS
     
