@@ -18,19 +18,19 @@ The appropriate version of HEC-RAS must already be installed to use AutoRAS.
 
 ## Basic Usage
 ```python
->>> import AutoRAS1Du as ARu
+>>> import AutoRAS1Du as ar1u
 
 >>> # Create a 1D unsteady flow data file based on given boundary data
->>> ARu.Py2HecRas_1DU_Flow(ProjectName="WabashAndTributarie")
+>>> ar1u.Py2HecRas_1DU_Flow(ProjectName="WabashAndTributarie")
 
 >>> # Create a HEC-RAS 1D unsteady flow plan file
->>> ARu.Py2HecRas_1DU_Plan(g=1,u=1,
+>>> ar1u.Py2HecRas_1DU_Plan(g=1,u=1,
                        StartDateTime="2008-01-21 00:00",
                        EndDateTime="2008-02-21 00:00",
                        ProjectName="WabashAndTributarie")
 
->>> # Run HEC-RAS 1D unsteady flow analysis and get results (WSE, flow, velocity)
->>> ARu.Py2HecRas_1DU_Run(ProjectName="WabashAndTributarie")   
+>>> # Run HEC-RAS 1D unsteady flow analysis and get results (WSE, flow, and velocity)
+>>> ar1u.Py2HecRas_1DU_Run(ProjectName="WabashAndTributarie")   
 
 ```
 ## Notes Before Using
