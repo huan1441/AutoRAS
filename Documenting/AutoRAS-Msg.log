@@ -1,0 +1,17 @@
+2021-05-10 20:53:33,101 - **********
+2021-05-10 20:53:33,101 - ERROR: Flow files were not generated, there must have been some missing data in the input files.
+2021-05-10 20:53:33,101 - **********
+
+2021-05-10 20:53:42,388 - **********
+2021-05-10 20:53:42,388 - INFO: HEC-RAS 1D unsteady flow data file for WabashAndTributarie is created successfully!
+2021-05-10 20:53:42,388 - **********
+
+2021-05-10 20:54:16,763 - **********
+2021-05-10 20:54:16,763 - ERROR: For WabashAndTributari:Computations were not performed, there must have been some missing data in the input files.
+2021-05-10 20:54:16,763 - **********
+
+2021-05-10 20:55:44,341 - **********
+2021-05-10 20:55:44,341 - INFO: Starting Unsteady Computations for WabashAndTributarie
+2021-05-10 20:55:44,341 - INFO: Computing successfully!
+2021-05-10 20:55:44,341 - **********
+
