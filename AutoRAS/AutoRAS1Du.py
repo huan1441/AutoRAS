@@ -4,12 +4,14 @@
 #
 # Script to 1) create a 1D unsteady flow data file based on given boundary data;
 #           2) create a HEC-RAS 1D unsteady flow plan file based on a template list;
-#           3) modify the original HEC-RAS project file;
-#           4) run HEC-RAS 1D unsteady flow analysis;
-#           5) extract 1D unsteady base results from the generated HEC-RAS plan HDF file; and
-#           6) log some errors and information.
+#           3) modify the Manning's n (given multiply factor) in the original geometry file
+#              and create a new geometry file with new Manning's n;
+#           4) modify the original HEC-RAS project file;
+#           5) run HEC-RAS 1D unsteady flow analysis;
+#           6) extract 1D unsteady base results from the generated HEC-RAS plan HDF file; and
+#           7) log some errors and information.
 #
-# Version 0.1
+# Version 0.2
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -21,7 +23,8 @@ import h5py
 import logging
 import logging.handlers
 
-## A function to read the flow hydrograph from the boundary condition CSV files
+## A function to create a 1D unsteady flow data file based on
+## the flow hydrograph and the friction slope from the boundary condition CSV files
 
 def Py2HecRas_1DU_Flow(ProjectName):
 
@@ -74,12 +77,10 @@ def Py2HecRas_1DU_Flow(ProjectName):
 
     ras_file = os.path.join(os.getcwd(),ProjectName+".prj")
 
-    hec.ShowRas()
-    
     # create a logger and a handler file to record processing message
     mylogger = logging.getLogger('mylogger')
     mylogger.setLevel(level=logging.INFO)
-    myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=2)
+    myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=1)
     myhandler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
     
     mylogger.addHandler(myhandler)
@@ -90,16 +91,18 @@ def Py2HecRas_1DU_Flow(ProjectName):
                    
     except IOError:
         mylogger.error("**********")
-        mylogger.error("ERROR: Flow files were not generated, there must have been some missing data in the input files.")
+        mylogger.error("ERROR: Flow files for "+ProjectName+" were not generated, because the project file does not exist.")
         mylogger.error("**********\n")
         mylogger.removeHandler(myhandler)
-        return(print("ERROR: Flow files were not generated, there must have been some missing data in the input files."))
+        return(print("ERROR: Flow files for "+ProjectName+" were not generated, because the project file does not exist."))
     
     else:
         mylogger.error("**********")
         mylogger.info("INFO: HEC-RAS 1D unsteady flow data file for "+ProjectName+" is created successfully!")
         mylogger.error("**********\n")
         mylogger.removeHandler(myhandler)
+
+    hec.ShowRas()
     
     hec.Project_Open(ras_file)
     
@@ -184,7 +187,171 @@ def Py2HecRas_1DU_Flow(ProjectName):
 
     print("INFO: HEC-RAS 1D unsteady flow data file for "+ProjectName+" is done!")
 
-## a function to Modify the original project file
+
+## a function to modify the Manning's n (multiply factor is given) in the original geometry file
+## and generate a new geometry file with new Manning's n
+
+def Py2HecRas_1DU_Geo(fl,fc,fr,ProjectName,g):
+    """fl is the multiply factor for the LOB Manning's n
+       fc is the multiply factor for the LOB Manning's n
+       fr is the multiply factor for the LOB Manning's n
+       g is the new number of geometry files
+       """
+    # a function to modify the Manning's n (multiply factor is given) in the original geometry file
+    def Py2HecRas_1DU_MN(fl,fc,fr,ProjectName,g):
+        # Initiate HEC-RAS API
+        hec=Dispatch("RAS507.HECRASController")
+        hec_geo=Dispatch("RAS507.HECRASGeometry")
+
+        ras_file = os.path.join(os.getcwd(),ProjectName+".prj")
+
+        # create a logger and a handler file to record processing message
+        mylogger = logging.getLogger('mylogger')
+        mylogger.setLevel(level=logging.INFO)
+        myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=1)
+        myhandler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+
+        mylogger.addHandler(myhandler)
+          
+        try:
+            f = open(ras_file)
+            f.close()
+                       
+        except IOError:
+            mylogger.error("**********")
+            mylogger.error("ERROR: Geometry files for "+ProjectName+" were not modified, because the project file does not exist.")
+            mylogger.error("**********\n")
+            mylogger.removeHandler(myhandler)
+            return(print("ERROR: Geometry files for "+ProjectName+" were not generated, because the project file does not exist."))
+
+        else:
+            mylogger.error("**********")
+            mylogger.info("INFO: HEC-RAS 1D geometry files for "+ProjectName+" is created successfully!")
+            mylogger.error("**********\n")
+            mylogger.removeHandler(myhandler)
+
+        hec.Project_Open(ras_file)
+
+        # Numbers of rivers and the corresponding reaches
+        River_No = hec_geo.nRiver()
+
+        Reach_No = []
+
+        for i in list(range(1,River_No+1)):   
+            Reach_No.append(hec_geo.nReach(i)[0])
+
+        River_ID = []
+
+        for i in list(range(1,River_No+1)): 
+            River_ID += [i]*Reach_No[i-1]
+            
+        Reach_ID = []
+
+        for i in Reach_No: 
+            Reach_ID += list(range(1,i+1))
+
+        # create a dataframe to store ID of river and its corresponding ID of reach
+        RR = pd.DataFrame(None,columns=['River_ID','Reach_ID'])
+        RR['River_ID'] = River_ID
+        RR['Reach_ID'] = Reach_ID
+
+        River_Name = []
+        Reach_Name = []
+        RS=[]
+        RS_type=[]
+
+        for i in range(len(RR)):
+            #read information of river stations: list of RS (LRS) and type of RS (TRS)
+
+            _,_,_,LRS,TRS = hec.Geometry_GetNodes(RR['River_ID'][i],RR['Reach_ID'][i])
+
+            for j in range(len(LRS)):    
+                
+                River_Name.append(hec_geo.RiverName(RR['River_ID'][i])[0])
+                Reach_Name.append(hec_geo.ReachName(RR['River_ID'][i],RR['Reach_ID'][i])[0])
+                RS.append(LRS[j])
+                RS_type.append(TRS[j])
+                
+        # create a dataframe to store Names of river and its corresponding names of reach and River stations
+        RRRS = pd.DataFrame(None, columns=['River_Name','Reach_Name','River_Station','RS_Type'])
+        RRRS['River_Name'] = River_Name
+        RRRS['Reach_Name'] = Reach_Name
+        RRRS['River_Station'] = RS
+        RRRS['RS_Type'] = RS_type
+
+        for i in range(len(RRRS)):
+            # get the simple river station instead of hydraulic structures
+            if RRRS['RS_Type'][i] == "":
+                # get the original Manning's values for LOB, Channel, and ROB
+                ini_n = hec.Geometry_GetMann(RRRS['River_Name'][i],
+                                             RRRS['Reach_Name'][i],
+                                             RRRS['River_Station'][i])[5]
+
+                # assign the new Manning's values for LOB, Channel, and ROB
+                new_ln = fl*ini_n[0]
+                new_cn = fc*ini_n[1]
+                new_rn = fr*ini_n[2]
+
+                hec.Geometry_SetMann_LChR(RRRS['River_Name'][i],
+                                          RRRS['Reach_Name'][i],
+                                          RRRS['River_Station'][i],
+                                          new_ln,new_cn,new_rn)
+        
+        hec_geo.Save()
+
+        hec.Project_Close()
+        hec.QuitRas()
+
+        del hec
+        del hec_geo
+
+    Py2HecRas_1DU_MN(fl,fc,fr,ProjectName,g)
+    
+    ras_file = os.path.join(os.getcwd(),ProjectName+".g99")
+
+    # create a logger and a handler file to record processing message
+    mylogger = logging.getLogger('mylogger')
+    mylogger.setLevel(level=logging.INFO)
+    myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=1)
+    myhandler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+
+    mylogger.addHandler(myhandler)
+      
+    try:
+        f = open(ras_file)
+        f.close()
+                   
+    except IOError:
+        mylogger.error("**********")
+        mylogger.error("ERROR: Geometry files for "+ProjectName+" were not generated, because the template geometry file does not exist.")
+        mylogger.error("**********\n")
+        mylogger.removeHandler(myhandler)
+        return(print("ERROR: Geometry files for "+ProjectName+" were not generated, because the template geometry file does not exist."))
+
+    else:
+        mylogger.error("**********")
+        mylogger.info("INFO: HEC-RAS 1D geometry files for "+ProjectName+" is created successfully!")
+        mylogger.error("**********\n")
+        mylogger.removeHandler(myhandler)
+    
+    # read the initial geometry file (number is 99)
+    f_old = open(ras_file,'r')
+    # write the new geometry data file
+    f_new = open(ProjectName+'.g'+str(g).zfill(2),'w')
+
+    for line in f_old:
+        f_new.write(line)
+
+    f_old.close()
+    f_new.close()
+
+    # restore the origial geometry file
+    Py2HecRas_1DU_MN(1/fl,1/fc,1/fr,ProjectName,g=99)
+    
+    print("INFO: HEC-RAS 1D geometry file for "+ProjectName+" is done!")
+
+
+## a function to modify the original project file
 
 def Py2HecRas_1DU_Project(u,p,ProjectName):
     """u is the added number of unsteady flow data files
@@ -196,9 +363,36 @@ def Py2HecRas_1DU_Project(u,p,ProjectName):
     # list of the added plan file
     pf = "Plan File=p"+str(p).zfill(2)+"\n"
 
+    ras_file = os.path.join(os.getcwd(),ProjectName+".prj")
+
+    # create a logger and a handler file to record processing message
+    mylogger = logging.getLogger('mylogger')
+    mylogger.setLevel(level=logging.INFO)
+    myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=1)
+    myhandler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+    
+    mylogger.addHandler(myhandler)
+      
+    try:
+        f = open(ras_file)
+        f.close()
+                   
+    except IOError:
+        mylogger.error("**********")
+        mylogger.error("ERROR: Project file for "+ProjectName+" was not modified, because the project file does not exist.")
+        mylogger.error("**********\n")
+        mylogger.removeHandler(myhandler)
+        return(print("ERROR: Project file for "+ProjectName+" was not generated, because the project file does not exist."))
+    
+    else:
+        mylogger.error("**********")
+        mylogger.info("INFO: HEC-RAS 1D unsteady project file for "+ProjectName+" is created successfully!")
+        mylogger.error("**********\n")
+        mylogger.removeHandler(myhandler)
+
     # Modify the original project file
 
-    f_prj = open(ProjectName+".prj", "r")
+    f_prj = open(ras_file, "r")
 
     prj_contents = f_prj.readlines()
 
@@ -230,6 +424,31 @@ def Py2HecRas_1DU_Plan(g,u,StartDateTime,EndDateTime,CI="1HOUR",HI="1DAY",MI="1D
     # Initiate HEC-RAS API
     hec=Dispatch("RAS507.HECRASController")
     ras_file = os.path.join(os.getcwd(),ProjectName+".prj")
+
+    # create a logger and a handler file to record processing message
+    mylogger = logging.getLogger('mylogger')
+    mylogger.setLevel(level=logging.INFO)
+    myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=1)
+    myhandler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
+    
+    mylogger.addHandler(myhandler)
+      
+    try:
+        f = open(ras_file)
+        f.close()
+                   
+    except IOError:
+        mylogger.error("**********")
+        mylogger.error("ERROR: Plan files for "+ProjectName+" were not created, because the project file does not exist.")
+        mylogger.error("**********\n")
+        mylogger.removeHandler(myhandler)
+        return(print("ERROR: Plan file for "+ProjectName+" were not generated, because the project file does not exist."))
+    
+    else:
+        mylogger.error("**********")
+        mylogger.info("INFO: HEC-RAS 1D unsteady plan file for "+ProjectName+" is created successfully!")
+        mylogger.error("**********\n")
+        mylogger.removeHandler(myhandler)
 
     hec.Project_Open(ras_file)
     
@@ -544,7 +763,7 @@ def Py2HecRas_1DU_Run(ProjectName):
     # create a logger and a handler file to record processing message
     mylogger = logging.getLogger('mylogger')
     mylogger.setLevel(level=logging.INFO)
-    myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=2)
+    myhandler = logging.handlers.TimedRotatingFileHandler('AutoRAS-Msg.log',when="D",interval=1,backupCount=1)
     myhandler.setFormatter(logging.Formatter("%(asctime)s - %(message)s"))
     
     mylogger.addHandler(myhandler)
@@ -558,7 +777,7 @@ def Py2HecRas_1DU_Run(ProjectName):
                 
     except:
         mylogger.error("**********")
-        mylogger.error("ERROR: For " + ProjectName+":"+Msg3[1])
+        mylogger.error("ERROR: For " + ProjectName+": "+Msg3[1])
         mylogger.error("**********\n")
         mylogger.removeHandler(myhandler)
         return(print("ERROR: "+ Msg3[1]))
@@ -716,5 +935,4 @@ if __name__ == '__main__':
                        ProjectName="WabashAndTributarie")
 
     Py2HecRas_1DU_Run(ProjectName="WabashAndTributarie")
-    
     
