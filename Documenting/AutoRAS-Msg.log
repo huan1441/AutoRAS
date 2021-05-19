@@ -1,17 +1,29 @@
-2021-05-10 20:53:33,101 - **********
-2021-05-10 20:53:33,101 - ERROR: Flow files were not generated, there must have been some missing data in the input files.
-2021-05-10 20:53:33,101 - **********
+2021-05-18 21:53:37,044 - **********
+2021-05-18 21:53:37,044 - ERROR: Flow files for TrialProject were not generated, because the project file does not exist.
+2021-05-18 21:53:37,044 - **********
 
-2021-05-10 20:53:42,388 - **********
-2021-05-10 20:53:42,388 - INFO: HEC-RAS 1D unsteady flow data file for WabashAndTributarie is created successfully!
-2021-05-10 20:53:42,388 - **********
+2021-05-18 21:53:50,429 - **********
+2021-05-18 21:53:50,429 - INFO: HEC-RAS 1D unsteady flow data file for WabashAndTributarie is created successfully!
+2021-05-18 21:53:50,429 - **********
 
-2021-05-10 20:54:16,763 - **********
-2021-05-10 20:54:16,763 - ERROR: For WabashAndTributari:Computations were not performed, there must have been some missing data in the input files.
-2021-05-10 20:54:16,763 - **********
+2021-05-18 21:53:58,067 - **********
+2021-05-18 21:53:58,067 - ERROR: Geometry files for TrialProject were not modified, because the project file does not exist.
+2021-05-18 21:53:58,067 - **********
 
-2021-05-10 20:55:44,341 - **********
-2021-05-10 20:55:44,341 - INFO: Starting Unsteady Computations for WabashAndTributarie
-2021-05-10 20:55:44,341 - INFO: Computing successfully!
-2021-05-10 20:55:44,341 - **********
+2021-05-18 21:53:58,069 - **********
+2021-05-18 21:53:58,069 - ERROR: Geometry files for TrialProject were not generated, because the template geometry file does not exist.
+2021-05-18 21:53:58,069 - **********
+
+2021-05-18 21:54:47,820 - **********
+2021-05-18 21:54:47,820 - ERROR: Plan files for TrialProject were not created, because the project file does not exist.
+2021-05-18 21:54:47,820 - **********
+
+2021-05-18 21:55:11,369 - **********
+2021-05-18 21:55:11,369 - ERROR: For TrialProject: Computations were not performed, there must have been some missing data in the input files.
+2021-05-18 21:55:11,369 - **********
+
+2021-05-18 21:55:44,202 - **********
+2021-05-18 21:55:44,202 - INFO: Starting Unsteady Computations for WabashAndTributarie
+2021-05-18 21:55:44,202 - INFO: Computing successfully!
+2021-05-18 21:55:44,202 - **********
 
